@@ -4,54 +4,30 @@ pragma solidity ^0.8.0;
 // Import this file to use console.log
 import "hardhat/console.sol";
 
-// interface where the balance of the total tokens that you own are shown
+// ERC20 token
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
 interface interfaceDao {
-    function showBalanceTokens(address, uint256) external view returns (uint256);
+    function viewOwner() external returns (address);
+    function changeSymbol(string memory _symbol) external;
+    function changeName(string memory _name) external;
+    function tokenBalance(address, uint) external view returns (uint);
 }
 
 contract Dao {
-    // Proposal structure
-    struct Proposal {  
-        string proposalName;
-        uint256 greenVote;
-        uint256 redVote;
-        bool accepted;
-        address[] eligibleVoter;
-        bool active;
-        uint256 proposalId;
-        uint maxVoteCount;
-        bool countedVoteCount;
-        uint voteEndTime;
-        mapping(address => bool) alreadyVoted;
-    }
-
-    // creator, an index for each proposal each time a new Proposal is created, tokens Id, interface
-    address public creator;
-    uint indexProposal;
-    uint256[] public tokens;
-    interfaceDao contractDao;
-
-    constructor() {
-        creator = msg.sender;
-        indexProposal = 1;
-        contractDao = interfaceDao();
-        tokens = [];
-    }
-
-    mapping(uint256 => Proposal) public Proposals;
 
     event newProposal(
         address proposalCreator,
         string proposalName,
-        uint256 proposalId,
-        uint maxVoteCount
+        uint proposalId,
+        uint totalVotes
     );
 
     event newVote(
         address voter,
-        uint256 greenVote,
-        uint256 redVote,
-        uint256 proposal,
+        uint greenVote,
+        uint redVote,
+        uint proposal,
         bool votedGreen
     );
 
@@ -59,6 +35,46 @@ contract Dao {
         uint256 proposalId,
         bool accepted
     );
+
+    // Proposal structure
+    struct Proposal {  
+        string proposalName;
+        uint greenVote;
+        uint redVote;
+        bool accepted;
+        address[] eligibleVoter;
+        bool active;
+        uint256 proposalId;
+        uint totalVotes;
+        bool countedAllVotes;
+        uint voteEndTime;
+        mapping(address => bool) alreadyVoted;
+    }
+
+    // creator, an index for each proposal each time a new Proposal is created, tokens Id, interface
+    address public creator;
+    uint indexProposal;
+    uint256[] public daoToken;
+    interfaceDao contractDao;
+
+    constructor() {
+        creator = msg.sender;
+        indexProposal = 1;
+        contractDao = interfaceDao();
+        daoToken = [];
+    }
+
+    mapping(uint256 => Proposal) public Proposals;
+
+    // check token Balance 
+    function getTokenBalance(address _votingCandidate) private view returns (bool){
+        uint256 userBalance = ERC20(daoToken).balanceOf(_votingCandidate);
+        if (userBalance > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     //Proposal
     function createProposal(uint minimum, string memory name, uint value, address payable recipient) public {
@@ -71,6 +87,7 @@ contract Dao {
         minimumContribution = minimum;
         proposals.push();
     }
+
 
     // get Proposal Name
     function setProposalName(string memory _name) external {
