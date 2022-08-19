@@ -4,39 +4,51 @@ pragma solidity ^0.8.0;
 // Import this file to use console.log
 import "hardhat/console.sol";
 
-contract DAO {
+// interface where the balance of the total tokens that you own are shown
+interface interfaceDao {
+    function showBalanceTokens(address, uint256) external view returns (uint256);
+}
+
+contract Dao {
     // Proposal structure
     struct Proposal {  
         string proposalName;
-        uint value;
-        address payable proposalCreator;
+        uint256 greenVote;
+        uint256 redVote;
         bool accepted;
+        address[] voter;
+        bool active;
+        uint256 proposalId;
         uint voteCount;
-        mapping(address => bool) approvals;
+        bool countedVoteCount;
+        uint voteEndTime;
+        mapping(address => bool) alreadyVoted;
     }
 
-    // proposalCreator, minimumContribution, voters, proposals
-    address public proposalCreator;
-    string public proposalName;
-    uint public minimumContribution;
-    mapping(address => bool) public voters;
-    uint public votersCount;
-    Proposal[] public proposals;
+    // creator, an index for each proposal each time a new Proposal is created, tokens Id, interface
+    address public creator;
+    uint indexProposal;
+    uint256[] public tokens;
+    interfaceDao contractDao;
 
-    // constructor (proposalCreator, voter)
     constructor() {
-        proposalCreator = msg.sender;
+        creator = msg.sender;
+        indexProposal = 1;
+        contractDao = interfaceDao();
+        tokens = [];
     }
+
+    mapping(uint256 => Proposal) public Proposals;
 
     //Proposal
-    function createProposal(string memory name, uint value, address payable recipient) public {
+    function createProposal(uint minimum, string memory name, uint value, address payable recipient) public {
         Proposal storage newProposal = proposals.push();
         newProposal.proposalName = name;
         newProposal.value = value;
         newProposal.proposalCreator = recipient;
         newProposal.accepted = false;
         newProposal.voteCount = 0;
-
+        minimumContribution = minimum;
         proposals.push();
     }
 
