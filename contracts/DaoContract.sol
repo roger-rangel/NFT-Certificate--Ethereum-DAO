@@ -16,10 +16,10 @@ contract Dao {
         uint256 greenVote;
         uint256 redVote;
         bool accepted;
-        address[] voter;
+        address[] eligibleVoter;
         bool active;
         uint256 proposalId;
-        uint voteCount;
+        uint maxVoteCount;
         bool countedVoteCount;
         uint voteEndTime;
         mapping(address => bool) alreadyVoted;
@@ -39,6 +39,26 @@ contract Dao {
     }
 
     mapping(uint256 => Proposal) public Proposals;
+
+    event newProposal(
+        address proposalCreator,
+        string proposalName,
+        uint256 proposalId,
+        uint maxVoteCount
+    );
+
+    event newVote(
+        address voter,
+        uint256 greenVote,
+        uint256 redVote,
+        uint256 proposal,
+        bool votedGreen
+    );
+
+    event votesCounted(
+        uint256 proposalId,
+        bool accepted
+    );
 
     //Proposal
     function createProposal(uint minimum, string memory name, uint value, address payable recipient) public {
