@@ -85,7 +85,6 @@ contract Dao {
 
     // create a Proposal
     function createProposal(address[] memory _eligibleVoter, string memory _name) public {
-
         require(getTokenBalance(msg.sender), "Make sure you hold a Token in order to submit a Proposal");
 
         Proposal storage newProposal = Proposals[indexProposal];
@@ -97,26 +96,34 @@ contract Dao {
         newProposal.totalVotes = _eligibleVoter.length;
 
         emit latestProposal(msg.sender, _name, indexProposal, _eligibleVoter.length);
-        
         indexProposal++;
     }
 
 
-    // get Proposal Name
-    function setProposalName(string memory _name) external {
-        require(
-            msg.sender == proposalCreator,
-            "You must be the owner to set the name of the Proposal"
-        );
-        proposalName = _name;
+    // change Proposal Name
+    function changeProposalName(string memory _name) external {
+        require(msg.sender == creator, "You must be the owner to set the name of the Proposal");
+        string proposalName = _name;
     }
 
-    // contribute to a Proposal
-        function contribute() public payable {
-        require(msg.value > minimumContribution);
+    // vote for a Proposal
+        function vote(uint _id, bool _vote) public {
+        require(Proposals[_id].active, "This Proposal is not active");
+        require(onlyEligibleVoter(msg.sender), "You don't have permission to vote for this Proposal yet");
+        require(!Proposals[_id].alreadyVoted[msg.sender], "You have already voted on this Proposal");
+        require(block.number <= Proposals[_id].voteEndTime, "The time granted for voting has expired");
 
-        voters[msg.sender] = true;
-        votersCount++;
+        Proposal storage votesProposal = Proposals[_id];
+
+        if(_vote) {
+            votesProposal.greenVote++;
+        }else{
+            votesProposal.redVote++;
+        }
+
+        votesProposal.alreadyVoted[msg.sender] = true;
+
+        emit newVote(votesProposal.greenVote, votesProposal.redVote, msg.sender, _id, _vote);
     }
 
     // approve Proposal
