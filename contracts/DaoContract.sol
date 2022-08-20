@@ -16,7 +16,7 @@ interface interfaceDao {
 
 contract Dao {
 
-    event newProposal(
+    event latestProposal(
         address proposalCreator,
         string proposalName,
         uint proposalId,
@@ -51,7 +51,7 @@ contract Dao {
         mapping(address => bool) alreadyVoted;
     }
 
-    // creator, an index for each proposal each time a new Proposal is created, tokens Id, interface
+    // creator, an index for each proposal each time a new Proposal is created, token Id, interface of the Dao contract
     address public creator;
     uint indexProposal;
     uint256[] public daoToken;
@@ -66,6 +66,13 @@ contract Dao {
 
     mapping(uint256 => Proposal) public Proposals;
 
+    // eligibility to Vote 
+    modifier onlyEligibleVoter(address _voter) {
+        uint balance = daoToken.balanceOf(_voter);
+        require(balance > 0);
+        _;
+    }
+
     // check token Balance 
     function getTokenBalance(address _votingCandidate) private view returns (bool){
         uint256 userBalance = ERC20(daoToken).balanceOf(_votingCandidate);
@@ -76,16 +83,22 @@ contract Dao {
         }
     }
 
-    //Proposal
-    function createProposal(uint minimum, string memory name, uint value, address payable recipient) public {
-        Proposal storage newProposal = proposals.push();
-        newProposal.proposalName = name;
-        newProposal.value = value;
-        newProposal.proposalCreator = recipient;
-        newProposal.accepted = false;
-        newProposal.voteCount = 0;
-        minimumContribution = minimum;
-        proposals.push();
+    // create a Proposal
+    function createProposal(address[] memory _eligibleVoter, string memory _name) public {
+
+        require(getTokenBalance(msg.sender), "Make sure you hold a Token in order to submit a Proposal");
+
+        Proposal storage newProposal = Proposals[indexProposal];
+        newProposal.proposalName = _name;
+        newProposal.eligibleVoter = _eligibleVoter;
+        newProposal.active = true;
+        newProposal.proposalId = indexProposal;
+        newProposal.voteEndTime = block.number + 20;
+        newProposal.totalVotes = _eligibleVoter.length;
+
+        emit latestProposal(msg.sender, _name, indexProposal, _eligibleVoter.length);
+        
+        indexProposal++;
     }
 
 
