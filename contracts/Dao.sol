@@ -72,7 +72,6 @@ contract Dao {
     }
 
     mapping(uint256 => Proposal) public Proposals;
-
     mapping(uint256 => Token) public Tokens;
 
     // view Proposal
