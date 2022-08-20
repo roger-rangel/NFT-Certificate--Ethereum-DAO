@@ -4,9 +4,6 @@ pragma solidity ^0.8.0;
 // Import this file to use console.log
 import "hardhat/console.sol";
 
-// ERC20 token
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
 interface interfaceDao {
     function viewOwner() external returns (address);
     function changeSymbol(string memory _symbol) external;
@@ -91,6 +88,16 @@ contract Dao {
         );
     }
 
+    // check token Balance 
+    function getTokenBalance(address _votingCandidate) private view returns (bool) {
+        for(uint i = 0; i < daoToken.length; i++){
+            if(contractDao.tokenBalance(_votingCandidate, daoToken[i]) >= 1){
+                return true;
+            }
+        }
+        return false;
+    }
+
     // make a Proposal
     function makeProposal(address[] memory _eligibleVoter, string memory _name) public {
         require(getTokenBalance(msg.sender), "Make sure you hold an Electric Token in order to submit a Proposal");
@@ -114,16 +121,6 @@ contract Dao {
 
         Proposal storage thisProposal = Proposals[_id];
         thisProposal.proposalName = _name;
-    }
-
-    // check token Balance 
-    function getTokenBalance(address _votingCandidate) private view returns (bool) {
-        for(uint i = 0; i < daoToken.length; i++){
-            if(contractDao.tokenBalance(_votingCandidate, daoToken[i]) >= 1){
-                return true;
-            }
-        }
-        return false;
     }
 
     // vote for a Proposal
