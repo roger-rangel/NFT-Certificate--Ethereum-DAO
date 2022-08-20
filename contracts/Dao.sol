@@ -23,7 +23,7 @@ contract Dao {
         uint totalVotes
     );
 
-    event newVote(
+    event submittedVote(
         uint proposal,
         bool votedGreen,
         address voter,
@@ -58,7 +58,7 @@ contract Dao {
         mapping(address => bool) alreadyVoted;
     }
 
-    // creator, an index for each proposal each time a new Proposal is created, token Id, interface of the Dao contract
+    // Dao creator, an index for each proposal each time a new Proposal is created, token Id, interface of the Dao contract
     address public creator;
     uint indexProposal;
     uint256[] public daoToken;
@@ -74,6 +74,23 @@ contract Dao {
     mapping(uint256 => Proposal) public Proposals;
 
     mapping(uint256 => Token) public Tokens;
+
+    // view Proposal
+    function viewProposal(uint256 _id) public view returns (
+        string memory,
+        bool,
+        bool,
+        uint,
+        uint
+    ) {
+        return (
+            Proposals[_id].proposalName,
+            Proposals[_id].active,
+            Proposals[_id].accepted,
+            Proposals[_id].proposalId,
+            Proposals[_id].voteEndTime
+        );
+    }
 
     // make a Proposal
     function makeProposal(address[] memory _eligibleVoter, string memory _name) public {
@@ -121,7 +138,7 @@ contract Dao {
         _vote ? votesProposal.greenVote++ : votesProposal.redVote++;
 
         votesProposal.alreadyVoted[msg.sender] = true;
-        emit newVote(_id, _vote, msg.sender, votesProposal.greenVote, votesProposal.redVote);
+        emit submittedVote(_id, _vote, msg.sender, votesProposal.greenVote, votesProposal.redVote);
     }
 
     // count all the votes
